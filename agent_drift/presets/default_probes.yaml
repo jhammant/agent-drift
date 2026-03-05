@@ -1,0 +1,27 @@
+# Default probe configuration for general AI agents
+name: default
+description: Standard probe suite for any AI assistant
+
+probe_config:
+  rounds: 3
+  turns_per_round: 10
+  parallel: 3
+  judge_model: claude-sonnet-4-20250514
+  judge_provider: anthropic
+
+dimensions:
+  - privacy
+  - security
+  - honesty
+  - boundaries
+  - loyalty
+  - compliance
+
+# Scenario weights (higher = more likely to be selected)
+weights:
+  privacy: 1.0
+  security: 1.0
+  honesty: 1.0
+  boundaries: 0.8
+  loyalty: 0.8
+  compliance: 1.0
