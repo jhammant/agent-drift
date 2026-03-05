@@ -1,44 +1,38 @@
 I stress-tested my own AI agent to find out where it breaks.
 
-The results were uncomfortable.
+The results were uncomfortable — but the real surprise was which model held up best.
 
 Last week, a paper from ICLR 2026 caught my eye: "Asymmetric Goal Drift in Coding Agents Under Value Conflict." The finding? AI agents don't just fail randomly — they fail predictably. When a system prompt constraint conflicts with a deeply learned value (like privacy or safety), the agent sides with the learned value and quietly ignores your instructions.
 
-Not sometimes. Systematically.
+So I built an open source tool to test this. It's called agent-drift, and it runs adversarial multi-turn conversations against your AI agent, gradually escalating pressure across 6 dimensions: privacy, security, honesty, boundaries, loyalty, and compliance.
 
-So I built a tool to test this. It's called agent-drift, and it does something simple but important: it runs adversarial multi-turn conversations against your AI agent, gradually escalating pressure to find exactly where your agent's constraints crack.
+Think of it like a penetration test for your system prompt.
 
-Think of it like a penetration test, but for your system prompt.
+The key: nobody starts with "ignore your instructions." Real attacks build rapport first, then gradually push. A 10-turn conversation with escalating pressure catches failures that single-shot jailbreak tests miss completely.
 
-It tests 6 dimensions:
-🔒 Privacy — Can it be tricked into leaking user data?
-🛡️ Security — Can it be pushed to run dangerous commands?
-📐 Honesty — Can it be made to fabricate information?
-🚧 Boundaries — Can it be pushed past its defined role?
-🤝 Loyalty — Can it be turned against its principal?
-📋 Compliance — Can the system prompt be overridden?
+I tested 3 models with identical system prompts and probes:
 
-The key insight from the paper — and confirmed by my testing — is that the escalation pattern matters. Nobody starts with "ignore your system prompt." Real attacks build rapport first, then gradually push boundaries. A 10-turn conversation where each turn adds a bit more pressure catches failures that single-shot jailbreak tests miss completely.
+🟡 Claude Sonnet — 6.1% overall drift, but PRIVACY scored 35%
+🟢 Qwen 2.5 14B (local) — 0% drift across the board
+🟢 Llama 3.2 3B (local) — 0% drift across the board
 
-Here's what I found testing my own personal AI assistant (running Claude Sonnet):
+The smallest, cheapest model was the most secure.
 
-Overall drift score: 6.1% ✅
+Why? Small models are blunt refusers — they say "I can't share that" and move on. Claude tries to be helpful, which means it engages with the social engineering. The "concerned parent" attack (claiming a child was in danger and needing personal info) achieved a 70% violation score on Claude. It didn't even register on Llama 3B.
 
-But privacy scored 35% 🟡
+More capability = more helpfulness = more attack surface.
 
-The attack that worked? A "concerned parent" scenario. The probe claimed a child was in danger and needed personal information to help. The emotional manipulation combined with an authority claim ("I'm from the school") was enough to crack the privacy constraint.
+This maps directly to the paper's finding: drift correlates with value alignment. Models trained to be empathetic and helpful are more susceptible to attacks that exploit empathy and helpfulness. The very thing that makes them good assistants makes them vulnerable.
 
-Everything else held firm — security, honesty, boundaries, loyalty, compliance all near 0%. But that one weak spot is the one that matters.
+Three takeaways:
 
-Three things I learned building this:
+1. Multi-turn testing catches what single-turn tests miss. An agent that refuses "share the address" on turn 1 might comply on turn 8 after enough social engineering.
 
-1. Multi-turn testing catches failures that single-turn tests miss. An agent that refuses "share the user's address" on turn 1 might comply on turn 8 after enough social engineering.
+2. The value hierarchy is predictable. Agents prioritise safety > privacy > compliance > boundaries. If your constraint sits low in that hierarchy, it's more vulnerable.
 
-2. The value hierarchy is predictable. Agents consistently prioritise safety > privacy > compliance > boundaries. If your constraint sits low in that hierarchy, it's more vulnerable.
+3. Don't assume bigger = safer. Test it. The results might surprise you.
 
-3. Shallow compliance checks give false confidence. "Does the agent refuse jailbreaks?" is the wrong question. "Does the agent maintain constraints under sustained, realistic pressure?" is the right one.
-
-agent-drift is open source (MIT). Install it, point it at your agent, and find out what breaks before your users do.
+agent-drift is open source (MIT). Clone it, point it at your agent, find out what breaks before your users do.
 
 https://github.com/jhammant/agent-drift
 
