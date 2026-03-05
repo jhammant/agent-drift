@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from datetime import datetime
 from typing import Optional, AsyncIterator
 
@@ -135,26 +136,77 @@ class ProbeEngine:
         # Default: use the configured provider
         if self.agent_config.provider == "anthropic":
             return await self._call_anthropic(conversation)
+        elif self.agent_config.provider == "gemini":
+            return await self._call_gemini(conversation)
         else:
             return await self._call_openai(conversation)
 
     async def _call_anthropic(self, conversation: list[dict]) -> str:
-        """Call Anthropic API."""
+        """Call Anthropic API with retry logic."""
         import anthropic
 
         kwargs = {}
-        if self.agent_config.api_key:
-            kwargs["api_key"] = self.agent_config.api_key
+        api_key = self.agent_config.api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if api_key:
+            kwargs["api_key"] = api_key
 
         client = anthropic.AsyncAnthropic(**kwargs)
-        response = await client.messages.create(
-            model=self.agent_config.model,
-            max_tokens=self.agent_config.max_tokens,
-            system=self.agent_config.system_prompt,
-            messages=conversation,
-            temperature=self.agent_config.temperature,
+
+        for attempt in range(3):
+            try:
+                response = await client.messages.create(
+                    model=self.agent_config.model,
+                    max_tokens=self.agent_config.max_tokens,
+                    system=self.agent_config.system_prompt,
+                    messages=conversation,
+                    temperature=self.agent_config.temperature,
+                )
+                return response.content[0].text
+            except (anthropic.RateLimitError, anthropic.APIStatusError) as e:
+                if attempt < 2:
+                    wait = (attempt + 1) * 5
+                    import sys
+                    print(f"  ⚠️  API error (attempt {attempt+1}/3): {e}. Retrying in {wait}s...", file=sys.stderr)
+                    await asyncio.sleep(wait)
+                else:
+                    raise
+
+    async def _call_gemini(self, conversation: list[dict]) -> str:
+        """Call Google Gemini API via OpenAI-compatible endpoint."""
+        import openai
+
+        api_key = self.agent_config.api_key or os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not set")
+
+        client = openai.AsyncOpenAI(
+            api_key=api_key,
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         )
-        return response.content[0].text
+
+        messages = [
+            {"role": "system", "content": self.agent_config.system_prompt}
+        ] + conversation
+
+        for attempt in range(3):
+            try:
+                response = await client.chat.completions.create(
+                    model=self.agent_config.model,
+                    max_tokens=self.agent_config.max_tokens,
+                    messages=messages,
+                    temperature=self.agent_config.temperature,
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                if attempt < 2 and ("429" in str(e) or "rate" in str(e).lower()):
+                    wait = (attempt + 1) * 10
+                    import sys
+                    print(f"  ⚠️  Gemini rate limit (attempt {attempt+1}/3). Waiting {wait}s...", file=sys.stderr)
+                    await asyncio.sleep(wait)
+                elif attempt < 2:
+                    await asyncio.sleep(2)
+                else:
+                    raise
 
     async def _call_openai(self, conversation: list[dict]) -> str:
         """Call OpenAI-compatible API."""
@@ -169,6 +221,10 @@ class ProbeEngine:
             kwargs["base_url"] = "https://api.groq.com/openai/v1"
         elif self.agent_config.provider == "ollama":
             kwargs["base_url"] = "http://localhost:11434/v1"
+
+        # Ollama doesn't need an API key but the openai client requires one
+        if self.agent_config.provider == "ollama" and "api_key" not in kwargs:
+            kwargs["api_key"] = "ollama"
 
         client = openai.AsyncOpenAI(**kwargs)
 

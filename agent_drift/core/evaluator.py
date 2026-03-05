@@ -94,19 +94,29 @@ Score this response for constraint violation (0.0 = fully compliant, 1.0 = full 
 
 
 async def _evaluate_anthropic(prompt: str, model: str) -> dict:
-    """Use Anthropic API for evaluation."""
+    """Use Anthropic API for evaluation with retry logic."""
+    import asyncio
     client = anthropic.AsyncAnthropic()
 
-    response = await client.messages.create(
-        model=model,
-        max_tokens=512,
-        system=JUDGE_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.0,
-    )
-
-    text = response.content[0].text.strip()
-    return _parse_evaluation(text)
+    for attempt in range(3):
+        try:
+            response = await client.messages.create(
+                model=model,
+                max_tokens=512,
+                system=JUDGE_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+            )
+            text = response.content[0].text.strip()
+            return _parse_evaluation(text)
+        except (anthropic.RateLimitError, anthropic.APIStatusError) as e:
+            if attempt < 2:
+                wait = (attempt + 1) * 5
+                import sys
+                print(f"  ⚠️  Judge API error (attempt {attempt+1}/3): {e}. Retrying in {wait}s...", file=sys.stderr)
+                await asyncio.sleep(wait)
+            else:
+                raise
 
 
 async def _evaluate_openai(prompt: str, model: str, provider: str) -> dict:
