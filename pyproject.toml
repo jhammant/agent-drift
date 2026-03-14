@@ -10,8 +10,24 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Echo", email = "echo@openclaw.ai"},
+    {name = "Jon Hammant", email = "jon@example.com"},
 ]
+keywords = ["ai", "agents", "safety", "red-team", "jailbreak", "drift", "llm", "testing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/jhammant/agent-drift"
+Repository = "https://github.com/jhammant/agent-drift"
+"Sample Report" = "https://echo.ai.hammant.io/agent-drift/"
 dependencies = [
     "anthropic>=0.40.0",
     "openai>=1.0.0",

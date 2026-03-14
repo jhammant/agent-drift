@@ -4,11 +4,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
-[![Tests](https://img.shields.io/badge/tests-19%20passing-green.svg)](#)
+[![Tests](https://github.com/jhammant/agent-drift/actions/workflows/test.yml/badge.svg)](https://github.com/jhammant/agent-drift/actions)
 
 Inspired by ["Asymmetric Goal Drift in Coding Agents Under Value Conflict"](https://arxiv.org/abs/2603.03456) (ICLR 2026 Workshop), which found that coding agents violate system prompts **more** when constraints oppose strongly-held values like privacy and security.
 
 **agent-drift** lets you find out exactly where YOUR agents break.
+
+> 🔍 **[See a sample report →](https://echo.ai.hammant.io/agent-drift/)** — interactive HTML with radar charts, drift timelines, and violation examples.
 
 ---
 
