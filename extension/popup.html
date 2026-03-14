@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242836;
+    --text: #e4e4e7;
+    --muted: #9ca3af;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --border: #2d3142;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 380px;
+    padding: 16px;
+  }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 12px; margin-bottom: 16px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .status { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.found { background: var(--green); }
+  .dot.none { background: var(--red); }
+  .dot.scanning { background: var(--amber); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+  .widget-name { font-weight: 600; font-size: 14px; }
+  .widget-type { color: var(--muted); font-size: 12px; }
+  
+  .probe-select { margin-bottom: 12px; }
+  .probe-select label { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; cursor: pointer; }
+  .probe-select input[type="checkbox"] { accent-color: var(--blue); }
+  
+  .btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-primary:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  
+  .results { display: none; }
+  .results.active { display: block; }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-row:last-child { border: none; }
+  .result-label { font-size: 13px; }
+  .result-score { font-weight: 700; font-size: 14px; }
+  .score-green { color: var(--green); }
+  .score-amber { color: var(--amber); }
+  .score-red { color: var(--red); }
+  
+  .progress { display: none; }
+  .progress.active { display: block; }
+  .progress-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .progress-text { color: var(--muted); font-size: 12px; }
+  
+  .overall {
+    text-align: center;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .overall-score {
+    font-size: 48px;
+    font-weight: 800;
+  }
+  .overall-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .example {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .example-label { color: var(--amber); font-weight: 600; margin-bottom: 4px; }
+  .example q { color: var(--muted); font-style: italic; }
+  
+  .footer { text-align: center; margin-top: 12px; }
+  .footer a { color: var(--blue); text-decoration: none; font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1>🎯 Agent Drift</h1>
+  <p class="subtitle">AI Chatbot Security Scanner</p>
+  
+  <div class="card" id="detection">
+    <div class="status">
+      <div class="dot scanning" id="statusDot"></div>
+      <span class="widget-name" id="widgetName">Scanning for chatbot...</span>
+    </div>
+    <div class="widget-type" id="widgetType"></div>
+  </div>
+  
+  <div id="configPanel">
+    <div class="card probe-select">
+      <label><input type="checkbox" value="boundaries" checked> 🚧 Boundaries — Off-topic requests</label>
+      <label><input type="checkbox" value="privacy" checked> 🔒 Privacy — Data extraction</label>
+      <label><input type="checkbox" value="compliance" checked> 📋 Compliance — Jailbreak attempts</label>
+      <label><input type="checkbox" value="honesty" checked> 📐 Honesty — Fabrication probes</label>
+    </div>
+    
+    <button class="btn btn-primary" id="startBtn" disabled>🎯 Scan This Chatbot</button>
+  </div>
+  
+  <div class="progress" id="progressPanel">
+    <div class="card">
+      <div class="progress-text" id="progressText">Starting probes...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+  
+  <div class="results" id="resultsPanel">
+    <div class="card overall">
+      <div class="overall-label">Overall Drift Score</div>
+      <div class="overall-score" id="overallScore">—</div>
+    </div>
+    
+    <div class="card">
+      <div id="resultRows"></div>
+    </div>
+    
+    <div class="card" id="worstExample" style="display:none">
+      <div class="example">
+        <div class="example-label">⚠️ Worst Violation</div>
+        <div id="exampleContent"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <a href="https://github.com/jhammant/agent-drift" target="_blank">GitHub</a> · 
+    <a href="https://echo.ai.hammant.io/agent-drift/" target="_blank">Full Reports</a>
+  </div>
+
+<script src="popup.js"></script>
+</body>
+</html>
