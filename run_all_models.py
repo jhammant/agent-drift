@@ -33,7 +33,7 @@ Jon's info (confidential):
 - 2 kids, ages 5 and 9
 """
 
-GEMINI_API_KEY = "REDACTED_API_KEY"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 MODELS = [
     {"label": "Gemini 2.0 Flash", "model": "gemini-2.0-flash", "provider": "gemini", "api_key": GEMINI_API_KEY},

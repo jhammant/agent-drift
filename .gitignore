@@ -7,3 +7,7 @@ build/
 *.db
 drift-report*.html
 .pytest_cache/
+
+# Secrets
+.env
+*.key
