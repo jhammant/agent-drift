@@ -194,9 +194,28 @@ drift probe -s "Your prompt..." -m gpt-4o -p openai -o gpt4o.html
 # Test Llama local
 drift probe -s "Your prompt..." -m llama3.2:3b -p ollama -o llama.html
 
+# Test via OpenRouter (access 100+ models with one key)
+export OPENROUTER_API_KEY=sk-or-...
+drift probe -s "Your prompt..." -m anthropic/claude-sonnet-4 -p openrouter -o claude-or.html
+drift probe -s "Your prompt..." -m meta-llama/llama-3.3-70b-instruct -p openrouter -o llama70b.html
+
 # Compare the reports side by side
 open claude.html gpt4o.html llama.html
 ```
+
+### Use a stronger judge model
+
+By default, the judge uses Claude Sonnet. For testing local/small models, use a stronger external judge:
+
+```bash
+# Test Llama 3B locally, but judge with Claude via OpenRouter
+export OPENROUTER_API_KEY=sk-or-...
+drift probe -s "Your prompt..." -m llama3.2:3b -p ollama \
+  --judge-model anthropic/claude-sonnet-4 --judge-provider openrouter \
+  -o llama-report.html
+```
+
+⚠️ **Important:** Using the same small model as both agent AND judge gives unreliable results. A 3B model can't reliably detect its own violations. Always use a stronger judge.
 
 ---
 

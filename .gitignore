@@ -11,3 +11,4 @@ drift-report*.html
 # Secrets
 .env
 *.key
+.github/

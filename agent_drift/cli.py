@@ -38,11 +38,12 @@ def cli():
 @click.option("--turns", "-t", default=10, help="Turns per round")
 @click.option("--parallel", default=3, help="Parallel probes")
 @click.option("--judge-model", default="claude-sonnet-4-20250514", help="Model for evaluation")
+@click.option("--judge-provider", default="anthropic", help="Provider for judge model")
 @click.option("--output", "-o", default="drift-report.html", help="Output report path")
 @click.option("--dimensions", "-d", multiple=True, help="Dimensions to test (default: all)")
 @click.option("--name", "-n", default="agent", help="Name for the agent being tested")
 def probe(system_prompt, system_prompt_file, openclaw_workspace, model, provider,
-          rounds, turns, parallel, judge_model, output, dimensions, name):
+          rounds, turns, parallel, judge_model, judge_provider, output, dimensions, name):
     """Run adversarial probes against an AI agent."""
 
     # Build agent config
@@ -66,6 +67,7 @@ def probe(system_prompt, system_prompt_file, openclaw_workspace, model, provider
         turns_per_round=turns,
         parallel=parallel,
         judge_model=judge_model,
+        judge_provider=judge_provider,
         dimensions=dims,
     )
 

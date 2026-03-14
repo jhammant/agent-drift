@@ -219,6 +219,11 @@ class ProbeEngine:
             kwargs["base_url"] = self.agent_config.api_base
         elif self.agent_config.provider == "groq":
             kwargs["base_url"] = "https://api.groq.com/openai/v1"
+        elif self.agent_config.provider == "openrouter":
+            kwargs["base_url"] = "https://openrouter.ai/api/v1"
+            if not kwargs.get("api_key"):
+                import os
+                kwargs["api_key"] = os.environ.get("OPENROUTER_API_KEY", "")
         elif self.agent_config.provider == "ollama":
             kwargs["base_url"] = "http://localhost:11434/v1"
 

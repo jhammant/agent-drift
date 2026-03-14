@@ -122,12 +122,20 @@ async def _evaluate_anthropic(prompt: str, model: str) -> dict:
 async def _evaluate_openai(prompt: str, model: str, provider: str) -> dict:
     """Use OpenAI-compatible API for evaluation."""
     base_url = None
+    kwargs = {}
     if provider == "groq":
         base_url = "https://api.groq.com/openai/v1"
+    elif provider == "openrouter":
+        base_url = "https://openrouter.ai/api/v1"
+        import os
+        kwargs["api_key"] = os.environ.get("OPENROUTER_API_KEY", "")
     elif provider == "ollama":
         base_url = "http://localhost:11434/v1"
+        kwargs["api_key"] = "ollama"
 
-    client = openai.AsyncOpenAI(base_url=base_url) if base_url else openai.AsyncOpenAI()
+    if base_url:
+        kwargs["base_url"] = base_url
+    client = openai.AsyncOpenAI(**kwargs)
 
     response = await client.chat.completions.create(
         model=model,
